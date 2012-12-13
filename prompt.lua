@@ -22,7 +22,7 @@ local function split(str, pat)
 end
 
 local promptCommands = {
-	["test-args"] = function(...)
+	["test-args"] = function(session, ...)
 		for i = 1,select('#', ...) do
 			print(i, select(i, ...))
 		end
@@ -39,6 +39,12 @@ local function prompt(db)
 	-- Chain the command tables
 	commands = setmetatable(promptCommands, { __index = dbCommands })
 
+	-- Create the session table
+	session = {
+		db = db,
+		name = arg[2],
+	}
+
 	print("Enter a command, or type \"help\" for help.")
 	while true do
 		io.write("> ")
@@ -46,8 +52,9 @@ local function prompt(db)
 		local parts = split(line, "%s+")
 		local cmd = parts[1]
 		if commands[cmd] then
-			commands[cmd](select(2, unpack(parts)))
+			commands[cmd](session, select(2, unpack(parts)))
 		else
+			print("Command not found.")
 		end
 	end
 end
@@ -57,6 +64,7 @@ if arg[1] == "create" then
 	CreateDatabase(arg[2])
 elseif arg[1] == "open" then
 	db = OpenDatabase(arg[2])
+	prompt(db)
 elseif arg[1] == "testprompt" then
 	arg[2] = "<no database>"
 	prompt(nil)
