@@ -27,7 +27,9 @@ local promptCommands = {
 			print(i, select(i, ...))
 		end
 	end,
-	["exit"] = function()
+
+	["exit"] = function(session)
+		session.db:Close()
 		os.exit()
 	end,
 }
