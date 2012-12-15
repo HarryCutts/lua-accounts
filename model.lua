@@ -13,6 +13,8 @@ local function value(db, query)
 	end
 end
 
+--[[ Public Functions ]]--
+
 function Database:New(sqliteDB)
 	assert(sqliteDB)
 	return setmetatable({ _sqliteDB = sqliteDB }, Database_mt)
@@ -22,30 +24,40 @@ function Database:Close()
 	self._sqliteDB:close()
 end
 
-function Database:AddAccount(name)
+local function AddAccountOrCategory(sqliteDB, tableName, name)
+	-- TODO: Prepared statements?
 	-- Validate the name (must be unique and cannot contain spaces or slashes)
-	if name:match("[%s/]") then
+	if name:match('[%s/]') then
 		return false, "Names cannot contain slashes or spaces."
 	end
 
-	if value(self._sqliteDB, [[SELECT count(*) FROM Account WHERE Name == "]]..name..'"') > 0 then
+	query = string.format('SELECT count(*) FROM %s WHERE Name == "%s"', tableName, name)
+	if value(sqliteDB, query) > 0 then
 		return false, "Name already in use."
 	end
 
 	-- TODO: case insensitivity?
 
-	-- Get a free ID number for the account (one more than the maximum ID)
-	local id = value(self._sqliteDB, [[SELECT max(ID) FROM Account]]) + 1
+	-- Get a free ID number for the account or category (one more than the maximum ID)
+	local id = (value(sqliteDB, 'SELECT max(ID) FROM '..tableName) or 0) + 1
 
 	-- Create the account
-	errcode = self._sqliteDB:exec(string.format([[INSERT INTO Account VALUES(%d, "%s")]],
-		id, name))
+	errcode = sqliteDB:exec(string.format('INSERT INTO %s VALUES(%d, "%s")',
+		tableName, id, name))
 
 	if errcode == sqlite3.OK then
 		return true
 	else
 		return false, "SQLite3 error "..errcode
 	end
+end
+
+function Database:AddAccount(name)
+	return AddAccountOrCategory(self._sqliteDB, 'Account', name)
+end
+
+function Database:AddCategory(name)
+	return AddAccountOrCategory(self._sqliteDB, 'Category', name)
 end
 
 function CreateDatabase(path)
