@@ -16,6 +16,20 @@ dbCommands = {
 		end
 	end,
 
+	["choose-account"] = function(session, name)
+		if not name or name == "" then
+			print(session.account and session.account.Name or "(none)")
+
+		else
+			account = session.db:Account(name)
+			if account then
+				session.account = account
+			else
+				print("Account not found: "..name)
+			end
+		end
+	end,
+
 	["create-category"] = function(session, name)
 		success, errorMessage = session.db:AddCategory(name)
 		if not success then

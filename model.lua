@@ -56,6 +56,14 @@ function Database:Accounts()
 	return self._sqliteDB:nrows('SELECT * FROM Account')
 end
 
+function Database:Account(name)
+	-- TODO: Prepared queries
+	local query = string.format('SELECT * FROM Account WHERE Name == "%s"', name)
+	for account in self._sqliteDB:nrows(query) do
+		return account
+	end
+end
+
 function Database:AddAccount(name)
 	return AddAccountOrCategory(self._sqliteDB, 'Account', name)
 end
