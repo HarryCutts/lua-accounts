@@ -13,7 +13,7 @@ local function value(db, query)
 	end
 end
 
---[[ Public Functions ]]--
+--[[ Database Class Functions ]]--
 
 function Database:New(sqliteDB)
 	assert(sqliteDB)
@@ -52,13 +52,23 @@ local function AddAccountOrCategory(sqliteDB, tableName, name)
 	end
 end
 
+function Database:Accounts()
+	return self._sqliteDB:nrows('SELECT * FROM Account')
+end
+
 function Database:AddAccount(name)
 	return AddAccountOrCategory(self._sqliteDB, 'Account', name)
+end
+
+function Database:Categories()
+	return self._sqliteDB:nrows('SELECT * FROM Category')
 end
 
 function Database:AddCategory(name)
 	return AddAccountOrCategory(self._sqliteDB, 'Category', name)
 end
+
+--[[ "Static" Functions ]]--
 
 function CreateDatabase(path)
 	local sqliteDB = sqlite3.open(path)
@@ -71,6 +81,7 @@ function CreateDatabase(path)
 		CREATE TABLE Account (ID INTEGER PRIMARY KEY, Name TEXT);
 		CREATE TABLE Category(ID INTEGER PRIMARY KEY, Name TEXT);
 		CREATE TABLE Trans(
+			ID          INTEGER PRIMARY KEY
 			Date        DATE,
 			Amount      INTEGER,
 			ToFrom      TEXT,
